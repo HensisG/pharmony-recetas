@@ -95,7 +95,8 @@
   .receta-head{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px;}
   .receta-head img{height:42px;}
   .receta-head .dates{text-align:right;font-size:10px;color:var(--mut);line-height:1.4;padding-top:4px;}
-  .doc-block{margin-bottom:14px;font-size:11px;line-height:1.4;}
+  .doc-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .doc-block{font-size:11px;line-height:1.4;}
   .doc-block .n{font-weight:700;font-size:13px;}
   .doc-block .c{color:var(--sub);}
   .doc-block .cl{color:var(--mut);}
@@ -120,9 +121,9 @@
   .sign-line .c{font-size:10px;color:var(--mut);}
   .valid-note{text-align:center;font-size:9px;color:#B7B7B4;margin-top:16px;}
   .descanso-texto{font-size:12px;font-weight:700;color:var(--red);}
-  .qr-area{display:flex;flex-direction:column;align-items:center;margin-top:16px;}
-  .qr-area img{width:76px;height:76px;image-rendering:pixelated;}
-  .qr-caption{font-size:8.5px;color:var(--mut);margin-top:3px;}
+  .qr-area{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+  .qr-area img{width:52px;height:52px;image-rendering:pixelated;}
+  .qr-caption{font-size:7.5px;color:var(--mut);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -311,10 +312,16 @@
         </div>
       </div>
 
-      <div class="doc-block hidden" id="rDoctorBlock">
-        <div class="n" id="rDocNombre"></div>
-        <div class="c" id="rDocMeta"></div>
-        <div class="cl" id="rDocClinica"></div>
+      <div class="doc-row">
+        <div class="doc-block hidden" id="rDoctorBlock">
+          <div class="n" id="rDocNombre"></div>
+          <div class="c" id="rDocMeta"></div>
+          <div class="cl" id="rDocClinica"></div>
+        </div>
+        <div class="qr-area hidden" id="rQrArea">
+          <div id="rQrCode"></div>
+          <div class="qr-caption">Verificar</div>
+        </div>
       </div>
 
       <div class="pac">
@@ -351,11 +358,6 @@
           <div class="n" id="rSignNombre">Seleccione un médico</div>
           <div class="c" id="rSignColeg"></div>
         </div>
-      </div>
-
-      <div class="qr-area hidden" id="rQrArea">
-        <div id="rQrCode"></div>
-        <div class="qr-caption">Escanea para verificar</div>
       </div>
 
       <div class="valid-note">Receta válida por 30 días desde la fecha de emisión.</div>
@@ -432,9 +434,13 @@
     }
     el.innerHTML = `
       <div class="verify-badge ${badgeClass}">${estado}</div>
+      <div style="border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:700;color:var(--ink);">${escapeHtml(data.medico)}</div>
+        <div style="font-size:12px;color:var(--sub);">${escapeHtml(data.colegiatura || '')}</div>
+        ${data.especialidad ? `<div style="font-size:11.5px;color:var(--mut);">${escapeHtml(data.especialidad)}</div>` : ''}
+      </div>
       <div class="verify-row"><b>Paciente:</b> ${escapeHtml(data.paciente)}</div>
       <div class="verify-row"><b>${escapeHtml(data.tipoDoc)}:</b> ${escapeHtml(data.numDoc)}</div>
-      <div class="verify-row"><b>Médico:</b> ${escapeHtml(data.medico)} (${escapeHtml(data.colegiatura)})</div>
       <div class="verify-row"><b>Emitida:</b> ${formatFechaCorta(data.fechaEmision)}</div>
       <div class="verify-row">${rangoTexto}</div>
     `;
@@ -810,6 +816,7 @@
       edad: document.getElementById('pEdad').value.trim(),
       medico: doc.nombre,
       colegiatura: doc.colegiatura,
+      especialidad: doc.especialidad || '',
       fechaEmision: today.toISOString().slice(0,10),
       descansoActivo: descansoOk,
       descansoDesde: descansoOk ? descansoDesdeVal : null,
@@ -921,7 +928,10 @@
       const fileName = `receta-${nombrePaciente}.pdf`;
       const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
-      if(navigator.canShare && navigator.canShare({ files: [file] })){
+      const esMovil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const puedeCompartirArchivo = esMovil && navigator.canShare && navigator.canShare({ files: [file] });
+
+      if(puedeCompartirArchivo){
         await navigator.share({
           files: [file],
           title: 'Receta médica',
@@ -936,7 +946,11 @@
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 2000);
-        alert('Tu navegador no permite compartir directo. Se descargó el PDF: ábrelo desde tus Descargas o Archivos y adjúntalo en WhatsApp o correo.');
+        if(esMovil){
+          alert('Tu navegador no permite adjuntar el archivo directamente. Se descargó el PDF: ábrelo desde tus Archivos y adjúntalo en WhatsApp o correo.');
+        }else{
+          alert('En computadora, WhatsApp Web y el correo no permiten adjuntar el archivo automáticamente. Se descargó el PDF a tu carpeta de Descargas: adjúntalo manualmente desde ahí. En el celular sí se adjunta solo.');
+        }
       }
     }catch(e){
       if(e && e.name !== 'AbortError'){
