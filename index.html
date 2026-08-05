@@ -50,6 +50,14 @@
   .icon-btn{background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;color:#B3261E;display:flex;align-items:center;}
   .icon-btn:hover{background:#FBEAEA;}
   .link-btn{background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--red);display:flex;align-items:center;gap:4px;padding:0;}
+  .checklist-grid{display:grid;grid-template-columns:1fr;gap:10px;max-height:520px;overflow-y:auto;padding:2px;border:1px solid var(--line);border-radius:10px;background:var(--bg);}
+  @media(min-width:640px){ .checklist-grid{grid-template-columns:1fr 1fr;} }
+  .checklist-cat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .checklist-cat-title{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+  .checklist-items{display:flex;flex-direction:column;gap:4px;}
+  .chk-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);cursor:pointer;}
+  .chk-item input{width:auto;margin:0;flex-shrink:0;}
+  .chk-otros{margin-top:6px;padding:5px 8px;font-size:11.5px;border:1px solid var(--line2);border-radius:6px;width:100%;}
   .btw{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
   .summary{display:flex;justify-content:space-between;background:var(--bg);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--sub);margin:16px 0;}
   .btn-primary{width:100%;padding:13px;border:none;border-radius:10px;background:var(--ink);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
@@ -121,6 +129,10 @@
   .sign-line{width:180px;border-top:1px solid var(--ink);margin-top:4px;padding-top:4px;text-align:center;}
   .sign-line .n{font-size:11px;font-weight:600;}
   .sign-line .c{font-size:10px;color:var(--mut);}
+  .sign-line .e{font-size:9px;color:var(--mut);font-style:italic;}
+  .folio{font-size:8.5px;color:var(--mut);margin-top:6px;letter-spacing:.03em;}
+  .cie10-tag{font-size:9px;font-weight:600;color:var(--mut);text-transform:none;letter-spacing:0;}
+  .pac-instrucciones{border-top:1px solid var(--line);margin-top:14px;padding-top:10px;font-size:10px;color:var(--sub);line-height:1.6;}
   .valid-note{text-align:center;font-size:9px;color:#B7B7B4;margin-top:16px;}
   .descanso-texto{font-size:12px;font-weight:700;color:var(--red);}
   .qr-area{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
@@ -129,7 +141,7 @@
   .receta.tema-capilar{ --red:#D48E29; --ink:#2E2E2E; }
   .receta.tema-capilar .receta-head{border-bottom-color:#E8D5B0;}
   .receta.tema-capilar #rLogo, .receta.tema-capilar #rLogoLab, .receta.tema-capilar #rLogoImg{height:34px;}
-  .capilar-footer{margin-top:14px;padding-top:10px;border-top:2px solid #D48E29;text-align:center;}
+  .capilar-footer{margin-top:14px;padding-top:10px;border-top:2px solid var(--red);text-align:center;}
   .cf-tagline{font-size:9.5px;font-weight:700;color:#2E2E2E;letter-spacing:.04em;text-transform:uppercase;}
   .cf-contact{font-size:8.5px;color:#8A8A87;margin-top:2px;}
 </style>
@@ -199,17 +211,23 @@
       </div>
       <div class="row2 field">
         <div>
-          <label>N° colegiatura (CMP)</label>
-          <input id="docColegiatura" placeholder="CMP 12345" />
+          <label>CMP</label>
+          <input id="docCmp" placeholder="103402" />
         </div>
         <div>
-          <label>Especialidad</label>
-          <input id="docEspecialidad" placeholder="Medicina general" />
+          <label>RNE (opcional)</label>
+          <input id="docRne" placeholder="A12599" />
         </div>
       </div>
-      <div class="field">
-        <label>Clínica / centro (opcional)</label>
-        <input id="docClinica" placeholder="Pharmony · Lima" />
+      <div class="row2 field">
+        <div>
+          <label>Especialidad</label>
+          <input id="docEspecialidad" placeholder="Medicina Ocupacional" />
+        </div>
+        <div>
+          <label>Clínica / centro (opcional)</label>
+          <input id="docClinica" placeholder="Pharmony · Lima" />
+        </div>
       </div>
 
       <div class="upload-grid">
@@ -260,6 +278,17 @@
         <div>
           <label>Edad</label>
           <input id="pEdad" placeholder="34" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');syncPaciente('');renderPreview()" />
+        </div>
+      </div>
+
+      <div class="row2 field">
+        <div>
+          <label>Empresa / Razón Social (opcional)</label>
+          <input id="pEmpresa" placeholder="Nombre de la empresa" oninput="syncPaciente('');renderPreview()" />
+        </div>
+        <div>
+          <label>CIE-10 (opcional)</label>
+          <input id="pCie10" placeholder="J02.9" oninput="renderPreview()" />
         </div>
       </div>
 
@@ -346,10 +375,11 @@
         <div class="full"><span class="l">Paciente: </span><span class="v" id="rNombre">—</span></div>
         <div><span class="l" id="rTipoDocLabel">DNI</span><span class="l">: </span><span class="v" id="rNumDoc">—</span></div>
         <div><span class="l">Edad: </span><span class="v" id="rEdad">—</span></div>
+        <div class="full hidden" id="rEmpresaRow"><span class="l">Empresa: </span><span class="v" id="rEmpresa"></span></div>
       </div>
 
       <div class="sec hidden" id="rDiagSec">
-        <div class="lbl">Diagnóstico</div>
+        <div class="lbl">Diagnóstico <span id="rCie10" class="cie10-tag"></span></div>
         <div id="rDiagnostico" style="font-size:12px;"></div>
       </div>
 
@@ -375,14 +405,16 @@
         <div class="sign-line">
           <div class="n" id="rSignNombre">Seleccione un médico</div>
           <div class="c" id="rSignColeg"></div>
+          <div class="e" id="rSignEspecialidad"></div>
         </div>
+        <div class="folio" id="rFolio"></div>
       </div>
 
-      <div class="valid-note">Receta válida por 30 días desde la fecha de emisión.</div>
+      <div class="valid-note">Receta válida por 30 días desde la fecha de emisión. Prohibida su enmendadura.</div>
 
-      <div class="capilar-footer hidden" id="rCapilarFooter">
-        <div class="cf-tagline">Especialistas en Restauración Capilar</div>
-        <div class="cf-contact">RUC: 20614205351 · WhatsApp: 928 877 148</div>
+      <div class="capilar-footer" id="rCapilarFooter">
+        <div class="cf-tagline" id="rFooterTagline">Pharmony Salud Ocupacional</div>
+        <div class="cf-contact" id="rFooterContact">Central: +51 919 746 268 · comercialperu@pharmonysst.com</div>
       </div>
     </div>
   </section>
@@ -412,17 +444,25 @@
         </div>
       </div>
 
+      <div class="row2 field">
+        <div>
+          <label>Empresa / Razón Social (opcional)</label>
+          <input id="pEmpresaLab" placeholder="Nombre de la empresa" oninput="syncPaciente('Lab');renderLabPreview()" />
+        </div>
+        <div>
+          <label>CIE-10 (opcional)</label>
+          <input id="pCie10Lab" placeholder="D64.9" oninput="renderLabPreview()" />
+        </div>
+      </div>
+
       <div class="field">
         <label>Indicación clínica / diagnóstico presuntivo</label>
         <textarea id="pIndicacionLab" rows="2" placeholder="D/c anemia" oninput="renderLabPreview()"></textarea>
       </div>
 
       <div class="field">
-        <div class="btw">
-          <label style="margin:0;">Exámenes solicitados</label>
-          <button class="link-btn" onclick="addLab()">+ Agregar examen</button>
-        </div>
-        <div id="labsList"></div>
+        <label style="margin:0 0 8px;">Exámenes solicitados</label>
+        <div id="labsChecklist" class="checklist-grid"></div>
       </div>
 
       <div class="field">
@@ -478,10 +518,11 @@
         <div class="full"><span class="l">Paciente: </span><span class="v" id="rNombreLab">—</span></div>
         <div><span class="l" id="rTipoDocLabelLab">DNI</span><span class="l">: </span><span class="v" id="rNumDocLab">—</span></div>
         <div><span class="l">Edad: </span><span class="v" id="rEdadLab">—</span></div>
+        <div class="full hidden" id="rEmpresaRowLab"><span class="l">Empresa: </span><span class="v" id="rEmpresaLab"></span></div>
       </div>
 
       <div class="sec hidden" id="rIndicacionSecLab">
-        <div class="lbl">Indicación clínica</div>
+        <div class="lbl">Indicación clínica <span id="rCie10Lab" class="cie10-tag"></span></div>
         <div id="rIndicacionLab" style="font-size:12px;"></div>
       </div>
 
@@ -502,14 +543,16 @@
         <div class="sign-line">
           <div class="n" id="rSignNombreLab">Seleccione un médico</div>
           <div class="c" id="rSignColegLab"></div>
+          <div class="e" id="rSignEspecialidadLab"></div>
         </div>
+        <div class="folio" id="rFolioLab"></div>
       </div>
 
-      <div class="valid-note">Orden válida por 30 días desde la fecha de emisión.</div>
+      <div class="valid-note">Orden válida por 30 días desde la fecha de emisión. Prohibida su enmendadura.</div>
 
-      <div class="capilar-footer hidden" id="rCapilarFooterLab">
-        <div class="cf-tagline">Especialistas en Restauración Capilar</div>
-        <div class="cf-contact">RUC: 20614205351 · WhatsApp: 928 877 148</div>
+      <div class="capilar-footer" id="rCapilarFooterLab">
+        <div class="cf-tagline" id="rFooterTaglineLab">Pharmony Salud Ocupacional</div>
+        <div class="cf-contact" id="rFooterContactLab">Central: +51 919 746 268 · comercialperu@pharmonysst.com</div>
       </div>
     </div>
   </section>
@@ -537,17 +580,63 @@
         </div>
       </div>
 
+      <div class="row2 field">
+        <div>
+          <label>Sexo</label>
+          <select id="pSexoImg" onchange="renderImgPreview()">
+            <option value="">—</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+        </div>
+        <div>
+          <label>Teléfono (opcional)</label>
+          <input id="pTelefonoImg" placeholder="999 999 999" oninput="renderImgPreview()" />
+        </div>
+      </div>
+
+      <div class="row2 field">
+        <div>
+          <label>Correo (opcional)</label>
+          <input id="pCorreoImg" placeholder="paciente@correo.com" oninput="renderImgPreview()" />
+        </div>
+        <div>
+          <label>Área / Cargo (opcional)</label>
+          <input id="pAreaImg" placeholder="Almacén / Operario" oninput="renderImgPreview()" />
+        </div>
+      </div>
+
+      <div class="row2 field">
+        <div>
+          <label>Empresa / Razón Social (opcional)</label>
+          <input id="pEmpresaImg" placeholder="Nombre de la empresa" oninput="syncPaciente('Img');renderImgPreview()" />
+        </div>
+        <div>
+          <label>CIE-10 (opcional)</label>
+          <input id="pCie10Img" placeholder="S62.9" oninput="renderImgPreview()" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Tipo de estudio</label>
+        <div style="display:flex;gap:16px;padding-top:4px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);">
+            <input type="radio" name="tipoEstudioImg" value="Diagnóstico" checked onchange="renderImgPreview()" style="width:auto;" /> Diagnóstico
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);">
+            <input type="radio" name="tipoEstudioImg" value="Seguimiento / Control" onchange="renderImgPreview()" style="width:auto;" /> Seguimiento / Control
+          </label>
+        </div>
+      </div>
+
       <div class="field">
         <label>Indicación clínica / diagnóstico presuntivo</label>
         <textarea id="pIndicacionImg" rows="2" placeholder="D/c fractura de muñeca" oninput="renderImgPreview()"></textarea>
       </div>
 
       <div class="field">
-        <div class="btw">
-          <label style="margin:0;">Estudios solicitados</label>
-          <button class="link-btn" onclick="addImg()">+ Agregar estudio</button>
-        </div>
-        <div id="imgsList"></div>
+        <label style="margin:0 0 8px;">Estudios solicitados</label>
+        <div id="imgsChecklist" class="checklist-grid"></div>
       </div>
 
       <div class="field">
@@ -603,10 +692,16 @@
         <div class="full"><span class="l">Paciente: </span><span class="v" id="rNombreImg">—</span></div>
         <div><span class="l" id="rTipoDocLabelImg">DNI</span><span class="l">: </span><span class="v" id="rNumDocImg">—</span></div>
         <div><span class="l">Edad: </span><span class="v" id="rEdadImg">—</span></div>
+        <div class="hidden" id="rSexoRowImg"><span class="l">Sexo: </span><span class="v" id="rSexoImg"></span></div>
+        <div class="hidden" id="rTelefonoRowImg"><span class="l">Tel: </span><span class="v" id="rTelefonoImg"></span></div>
+        <div class="full hidden" id="rCorreoRowImg"><span class="l">Correo: </span><span class="v" id="rCorreoImg"></span></div>
+        <div class="full hidden" id="rAreaRowImg"><span class="l">Área/Cargo: </span><span class="v" id="rAreaImg"></span></div>
+        <div class="full hidden" id="rEmpresaRowImg"><span class="l">Empresa: </span><span class="v" id="rEmpresaImg"></span></div>
+        <div class="full"><span class="l">Tipo de estudio: </span><span class="v" id="rTipoEstudioImg">Diagnóstico</span></div>
       </div>
 
       <div class="sec hidden" id="rIndicacionSecImg">
-        <div class="lbl">Indicación clínica</div>
+        <div class="lbl">Indicación clínica <span id="rCie10Img" class="cie10-tag"></span></div>
         <div id="rIndicacionImg" style="font-size:12px;"></div>
       </div>
 
@@ -627,14 +722,25 @@
         <div class="sign-line">
           <div class="n" id="rSignNombreImg">Seleccione un médico</div>
           <div class="c" id="rSignColegImg"></div>
+          <div class="e" id="rSignEspecialidadImg"></div>
         </div>
+        <div class="folio" id="rFolioImg"></div>
       </div>
 
-      <div class="valid-note">Orden válida por 30 días desde la fecha de emisión.</div>
+      <div class="pac-instrucciones">
+        <div class="lbl" style="margin-bottom:4px;">Indicaciones para el paciente</div>
+        <div>· Acudir con esta orden impresa o digital.</div>
+        <div>· Presentar documento de identidad.</div>
+        <div>· Informar si está embarazada.</div>
+        <div>· Traer estudios previos, si los tuviera.</div>
+        <div>· Seguir las indicaciones específicas del estudio.</div>
+      </div>
 
-      <div class="capilar-footer hidden" id="rCapilarFooterImg">
-        <div class="cf-tagline">Especialistas en Restauración Capilar</div>
-        <div class="cf-contact">RUC: 20614205351 · WhatsApp: 928 877 148</div>
+      <div class="valid-note">Orden válida por 30 días desde la fecha de emisión. Prohibida su enmendadura.</div>
+
+      <div class="capilar-footer" id="rCapilarFooterImg">
+        <div class="cf-tagline" id="rFooterTaglineImg">Pharmony Salud Ocupacional</div>
+        <div class="cf-contact" id="rFooterContactImg">Central: +51 919 746 268 · comercialperu@pharmonysst.com</div>
       </div>
     </div>
   </section>
@@ -662,8 +768,79 @@
   let doctors = [];
   let selectedDoctorId = '';
   let meds = [{id: uid(), nombre:'', indicaciones:''}];
-  let labs = [{id: uid(), nombre:'', indicaciones:''}];
-  let imgs = [{id: uid(), nombre:'', indicaciones:''}];
+  let labSeleccion = {};
+  let labOtros = {};
+  let imgSeleccion = {};
+  let imgOtros = {};
+
+  const CATEGORIAS_IMG = [
+    { nombre: 'Rayos X', icono: '🦴', items: ['Cráneo','Senos paranasales','Columna cervical','Columna dorsal','Columna lumbar','Tórax (PA y lateral)','Hombro','Codo','Muñeca / Mano','Pelvis','Cadera','Rodilla','Tobillo / Pie','Abdomen simple'] },
+    { nombre: 'Ecografías', icono: '🔊', items: ['Abdomen total','Hígado y vías biliares','Vesícula biliar','Páncreas','Bazo','Riñones y vías urinarias','Próstata (vía abdominal)','Tiroides','Mama','Testículos','Partes blandas','Doppler venoso','Doppler arterial'] },
+    { nombre: 'Tomografía (TC)', icono: '🌀', items: ['Cráneo simple','Senos paranasales','Tórax simple','Tórax contrastado','Abdomen simple','Abdomen contrastado','Columna cervical','Columna dorsal','Columna lumbar','Angiotomografía'] },
+    { nombre: 'Resonancia Magnética (RM)', icono: '🧲', items: ['Encéfalo','Columna cervical','Columna dorsal','Columna lumbar','Hombro','Rodilla','Cadera','Pelvis','Abdomen','Mama','Próstata'] },
+    { nombre: 'Mamografía', icono: '🎗️', items: ['Mamografía bilateral','Mamografía unilateral (Derecha)','Mamografía unilateral (Izquierda)','Con tomosíntesis','Control / Seguimiento'] },
+    { nombre: 'Densitometría Ósea', icono: '📊', items: ['Columna lumbar','Cadera','Radio distal','Cuerpo completo'] },
+    { nombre: 'Medicina Nuclear', icono: '☢️', items: ['Gammagrafía ósea','Gammagrafía renal','Gammagrafía hepato-biliar','Gammagrafía tiroidea','PET-CT'] },
+    { nombre: 'Radiología Dental', icono: '🦷', items: ['Radiografía periapical','Radiografía interproximal','Ortopantomografía (Panorámica)','Telerradiografía lateral'] },
+    { nombre: 'Estudios Especiales', icono: '🔬', items: ['Angio TC','Angio RM','Urodinamia','Colangiografía por TC'] },
+    { nombre: 'Estudios Vasculares', icono: '🩸', items: ['Eco Doppler carotídeo','Eco Doppler arterial (miembros inferiores)','Eco Doppler venoso (miembros inferiores)','Doppler renal'] },
+    { nombre: 'Imágenes para Tricología', icono: '💇', items: ['Tricoscopia digital','Fototricograma','Microscopía del cabello'] },
+    { nombre: 'Imágenes para Medicina Estética', icono: '✨', items: ['Ecografía facial','Ecografía de tejidos blandos','Fotografía clínica (antes/después)'] }
+  ];
+
+  const CATEGORIAS_LAB = [
+    { nombre: 'Hematología', icono: '🩸', items: ['Hemograma completo','Grupo sanguíneo y factor Rh','Velocidad de sedimentación (VSG)','Tiempo de protrombina (TP)','Tiempo de tromboplastina (TTPA)','Reticulocitos'] },
+    { nombre: 'Bioquímica', icono: '⚗️', items: ['Glucosa en ayunas','Glucosa post-prandial','Hemoglobina glicosilada (HbA1c)','Ácido úrico','Perfil lipídico completo','Colesterol total','Triglicéridos'] },
+    { nombre: 'Función Hepática', icono: '🫀', items: ['TGO (AST)','TGP (ALT)','Fosfatasa alcalina','Bilirrubinas totales y fraccionadas','Proteínas totales y albúmina'] },
+    { nombre: 'Función Renal', icono: '💧', items: ['Urea','Creatinina','Depuración de creatinina','Electrolitos (Na, K, Cl)'] },
+    { nombre: 'Hormonas', icono: '🧬', items: ['TSH','T3 libre','T4 libre','Insulina','Cortisol','Testosterona','Estradiol','Prolactina'] },
+    { nombre: 'Serología / Inmunología', icono: '🦠', items: ['VIH','VDRL / RPR','Hepatitis B (HBsAg)','Hepatitis C','PCR','Factor reumatoideo'] },
+    { nombre: 'Orina y Heces', icono: '🧪', items: ['Examen completo de orina','Urocultivo','Parasitológico en heces','Sangre oculta en heces'] },
+    { nombre: 'Marcadores Tumorales', icono: '🎗️', items: ['PSA total','PSA libre','CA 125','CA 19-9','CEA','Alfafetoproteína'] },
+    { nombre: 'Medicina Ocupacional', icono: '🦺', items: ['Plomo en sangre','Perfil toxicológico','Audiometría (referencial)','Espirometría (referencial)'] },
+    { nombre: 'Microbiología', icono: '🔬', items: ['Cultivo y antibiograma','Tinción Gram'] }
+  ];
+
+  function toggleChecklistItem(tipo, categoria, item, checked){
+    const seleccion = tipo === 'lab' ? labSeleccion : imgSeleccion;
+    seleccion[categoria + '|' + item] = checked;
+    if(tipo === 'lab') renderLabPreview(); else renderImgPreview();
+  }
+  function updateChecklistOtros(tipo, categoria, valor){
+    const otros = tipo === 'lab' ? labOtros : imgOtros;
+    otros[categoria] = valor;
+    if(tipo === 'lab') renderLabPreview(); else renderImgPreview();
+  }
+  function itemsSeleccionados(categorias, seleccion, otros){
+    const resultado = [];
+    categorias.forEach(cat => {
+      const marcados = cat.items.filter(it => seleccion[cat.nombre + '|' + it]);
+      const extra = (otros[cat.nombre] || '').trim();
+      const lista = marcados.concat(extra ? [extra] : []);
+      if(lista.length) resultado.push({ categoria: cat.nombre, items: lista });
+    });
+    return resultado;
+  }
+  function renderChecklist(categorias, seleccion, otros, containerId, tipo){
+    const el = document.getElementById(containerId);
+    el.innerHTML = categorias.map(cat => `
+      <div class="checklist-cat">
+        <div class="checklist-cat-title">${cat.icono} ${escapeHtml(cat.nombre)}</div>
+        <div class="checklist-items">
+          ${cat.items.map(it => `
+            <label class="chk-item">
+              <input type="checkbox" ${seleccion[cat.nombre+'|'+it] ? 'checked' : ''}
+                onchange='toggleChecklistItem("${tipo}", "${cat.nombre}", "${it}", this.checked)' />
+              <span>${escapeHtml(it)}</span>
+            </label>
+          `).join('')}
+        </div>
+        <input class="chk-otros" placeholder="Otros" value="${escapeAttr(otros[cat.nombre]||'')}"
+          oninput='updateChecklistOtros("${tipo}", "${cat.nombre}", this.value)' />
+      </div>
+    `).join('');
+  }
+
   let pendingFirma = null;
   let pendingSello = null;
   let marca = 'ocupacional'; // 'ocupacional' | 'capilar'
@@ -686,7 +863,17 @@
     const esCapilar = marca === 'capilar';
     recetaEl.classList.toggle('tema-capilar', esCapilar);
     document.getElementById(logoId).src = esCapilar ? LOGO_CAPILAR : LOGO_OCUPACIONAL;
-    document.getElementById(footerId).classList.toggle('hidden', !esCapilar);
+
+    const suf = footerId.replace('rCapilarFooter', '');
+    const taglineEl = document.getElementById('rFooterTagline' + suf);
+    const contactEl = document.getElementById('rFooterContact' + suf);
+    if(esCapilar){
+      taglineEl.textContent = 'Especialistas en Restauración Capilar';
+      contactEl.textContent = 'RUC: 20614205351 · WhatsApp: 928 877 148';
+    }else{
+      taglineEl.textContent = 'Pharmony Salud Ocupacional';
+      contactEl.textContent = 'Central: +51 919 746 268 · comercialperu@pharmonysst.com';
+    }
   }
 
   function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -760,8 +947,8 @@
       renderDoctorsList();
       renderDoctorSelect();
       renderMeds();
-      renderLabs();
-      renderImgs();
+      renderLabsChecklist();
+      renderImgsChecklist();
       renderPreview();
       renderLabPreview();
       renderImgPreview();
@@ -855,50 +1042,96 @@
     const tipoDoc = document.getElementById('pTipoDoc'+fromSuffix).value;
     const numDoc = document.getElementById('pNumDoc'+fromSuffix).value;
     const edad = document.getElementById('pEdad'+fromSuffix).value;
+    const empresa = document.getElementById('pEmpresa'+fromSuffix).value;
     suffixes.forEach(s => {
       if(s === fromSuffix) return;
       document.getElementById('pNombre'+s).value = nombre;
       document.getElementById('pTipoDoc'+s).value = tipoDoc;
       document.getElementById('pNumDoc'+s).value = numDoc;
       document.getElementById('pEdad'+s).value = edad;
+      document.getElementById('pEmpresa'+s).value = empresa;
     });
   }
 
   // ---------- doctor form uploads ----------
-  function handleUpload(input, kind){
-    const file = input.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if(kind==='firma'){
-        pendingFirma = reader.result;
-        document.getElementById('firmaBox').innerHTML = '<img src="'+reader.result+'" />';
-      }else{
-        pendingSello = reader.result;
-        document.getElementById('selloBox').innerHTML = '<img src="'+reader.result+'" />';
-      }
-    };
-    reader.readAsDataURL(file);
+  function comprimirImagen(file, maxDim, calidad){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > height && width > maxDim){
+            height = Math.round(height * (maxDim / width));
+            width = maxDim;
+          }else if(height > maxDim){
+            width = Math.round(width * (maxDim / height));
+            height = maxDim;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', calidad));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
-  ['docNombre','docColegiatura'].forEach(id=>{
+  async function handleUpload(input, kind){
+    const file = input.files[0];
+    if(!file) return;
+    const boxId = kind === 'firma' ? 'firmaBox' : 'selloBox';
+    const box = document.getElementById(boxId);
+    const originalContent = box.innerHTML;
+    box.innerHTML = '<span>Procesando…</span>';
+    try{
+      const dataUrl = await comprimirImagen(file, 500, 0.72);
+      if(kind === 'firma'){
+        pendingFirma = dataUrl;
+      }else{
+        pendingSello = dataUrl;
+      }
+      box.innerHTML = '<img src="'+dataUrl+'" />';
+    }catch(e){
+      box.innerHTML = originalContent;
+      alert('No se pudo procesar la imagen. Intenta con otra foto.');
+    }
+  }
+
+  ['docNombre','docCmp'].forEach(id=>{
     document.addEventListener('DOMContentLoaded', ()=>{
       document.getElementById(id).addEventListener('input', updateSaveDoctorBtn);
     });
   });
   function updateSaveDoctorBtn(){
     const n = document.getElementById('docNombre').value.trim();
-    const c = document.getElementById('docColegiatura').value.trim();
+    const c = document.getElementById('docCmp').value.trim();
     document.getElementById('saveDoctorBtn').disabled = !(n && c);
+  }
+
+  function formatColegiatura(cmp, rne){
+    let txt = cmp ? 'CMP: ' + cmp : '';
+    if(rne) txt += (txt ? ' · ' : '') + 'RNE: ' + rne;
+    return txt;
   }
 
   async function addDoctor(){
     const nombre = document.getElementById('docNombre').value.trim();
-    const colegiatura = document.getElementById('docColegiatura').value.trim();
-    if(!nombre || !colegiatura) return;
+    const cmp = document.getElementById('docCmp').value.trim();
+    if(!nombre || !cmp) return;
+    const rne = document.getElementById('docRne').value.trim();
     const especialidad = document.getElementById('docEspecialidad').value.trim();
     const clinica = document.getElementById('docClinica').value.trim();
-    const newDoc = {id: uid(), nombre, colegiatura, especialidad, clinica, firma: pendingFirma, sello: pendingSello};
+    const colegiatura = formatColegiatura(cmp, rne);
+    const newDoc = {id: uid(), nombre, cmp, rne, colegiatura, especialidad, clinica, firma: pendingFirma, sello: pendingSello};
     const saveBtn = document.getElementById('saveDoctorBtn');
     saveBtn.disabled = true;
     saveBtn.textContent = 'Guardando…';
@@ -915,7 +1148,8 @@
     selectedDoctorId = newDoc.id;
 
     document.getElementById('docNombre').value='';
-    document.getElementById('docColegiatura').value='';
+    document.getElementById('docCmp').value='';
+    document.getElementById('docRne').value='';
     document.getElementById('docEspecialidad').value='';
     document.getElementById('docClinica').value='';
     pendingFirma = null; pendingSello = null;
@@ -1020,62 +1254,12 @@
     `).join('');
   }
 
-  function addLab(){
-    labs.push({id: uid(), nombre:'', indicaciones:''});
-    renderLabs();
-    renderLabPreview();
+  function renderLabsChecklist(){
+    renderChecklist(CATEGORIAS_LAB, labSeleccion, labOtros, 'labsChecklist', 'lab');
   }
-  function removeLab(id){
-    if(labs.length>1) labs = labs.filter(m=>m.id!==id);
-    renderLabs();
-    renderLabPreview();
+  function renderImgsChecklist(){
+    renderChecklist(CATEGORIAS_IMG, imgSeleccion, imgOtros, 'imgsChecklist', 'img');
   }
-  function updateLab(id, field, value){
-    const m = labs.find(m=>m.id===id);
-    if(m){ m[field]=value; renderLabPreview(); }
-  }
-  function renderLabs(){
-    const el = document.getElementById('labsList');
-    el.innerHTML = labs.map((m,i)=>`
-      <div class="med-row">
-        <span class="med-num">${i+1}.</span>
-        <div class="med-fields">
-          <input placeholder="Hemograma completo" value="${escapeAttr(m.nombre)}" oninput="updateLab('${m.id}','nombre',this.value)" />
-          <input placeholder="En ayunas" value="${escapeAttr(m.indicaciones)}" oninput="updateLab('${m.id}','indicaciones',this.value)" />
-        </div>
-        <button class="icon-btn" onclick="removeLab('${m.id}')">✕</button>
-      </div>
-    `).join('');
-  }
-
-  function addImg(){
-    imgs.push({id: uid(), nombre:'', indicaciones:''});
-    renderImgs();
-    renderImgPreview();
-  }
-  function removeImg(id){
-    if(imgs.length>1) imgs = imgs.filter(m=>m.id!==id);
-    renderImgs();
-    renderImgPreview();
-  }
-  function updateImg(id, field, value){
-    const m = imgs.find(m=>m.id===id);
-    if(m){ m[field]=value; renderImgPreview(); }
-  }
-  function renderImgs(){
-    const el = document.getElementById('imgsList');
-    el.innerHTML = imgs.map((m,i)=>`
-      <div class="med-row">
-        <span class="med-num">${i+1}.</span>
-        <div class="med-fields">
-          <input placeholder="Radiografía de tórax PA y lateral" value="${escapeAttr(m.nombre)}" oninput="updateImg('${m.id}','nombre',this.value)" />
-          <input placeholder="Con contraste" value="${escapeAttr(m.indicaciones)}" oninput="updateImg('${m.id}','indicaciones',this.value)" />
-        </div>
-        <button class="icon-btn" onclick="removeImg('${m.id}')">✕</button>
-      </div>
-    `).join('');
-  }
-
 
   // ---------- dates ----------
   function formatFecha(d){
@@ -1105,6 +1289,8 @@
     const tipoDoc = document.getElementById('pTipoDoc').value;
     const numDoc = document.getElementById('pNumDoc').value.trim();
     const edad = document.getElementById('pEdad').value.trim();
+    const empresa = document.getElementById('pEmpresa').value.trim();
+    const cie10 = document.getElementById('pCie10').value.trim();
     const diagnostico = document.getElementById('pDiagnostico').value.trim();
     const otras = document.getElementById('pOtras').value.trim();
 
@@ -1112,10 +1298,13 @@
     document.getElementById('rTipoDocLabel').textContent = tipoDoc;
     document.getElementById('rNumDoc').textContent = numDoc || '—';
     document.getElementById('rEdad').textContent = edad || '—';
+    document.getElementById('rEmpresaRow').classList.toggle('hidden', !empresa);
+    document.getElementById('rEmpresa').textContent = empresa;
 
     const diagSec = document.getElementById('rDiagSec');
     diagSec.classList.toggle('hidden', !diagnostico);
     document.getElementById('rDiagnostico').textContent = diagnostico;
+    document.getElementById('rCie10').textContent = cie10 ? '(CIE-10: ' + cie10 + ')' : '';
 
     const otrasSec = document.getElementById('rOtrasSec');
     otrasSec.classList.toggle('hidden', !otras);
@@ -1176,6 +1365,7 @@
 
     document.getElementById('rSignNombre').textContent = doc ? doc.nombre : 'Seleccione un médico';
     document.getElementById('rSignColeg').textContent = doc ? doc.colegiatura : '';
+    document.getElementById('rSignEspecialidad').textContent = doc && doc.especialidad ? doc.especialidad : '';
 
     const canPrint = nombre && numDoc && doc;
     document.getElementById('printBtn').disabled = !canPrint;
@@ -1196,6 +1386,8 @@
     const tipoDoc = document.getElementById('pTipoDocLab').value;
     const numDoc = document.getElementById('pNumDocLab').value.trim();
     const edad = document.getElementById('pEdadLab').value.trim();
+    const empresa = document.getElementById('pEmpresaLab').value.trim();
+    const cie10 = document.getElementById('pCie10Lab').value.trim();
     const indicacion = document.getElementById('pIndicacionLab').value.trim();
     const otras = document.getElementById('pOtrasLab').value.trim();
 
@@ -1203,24 +1395,27 @@
     document.getElementById('rTipoDocLabelLab').textContent = tipoDoc;
     document.getElementById('rNumDocLab').textContent = numDoc || '—';
     document.getElementById('rEdadLab').textContent = edad || '—';
+    document.getElementById('rEmpresaRowLab').classList.toggle('hidden', !empresa);
+    document.getElementById('rEmpresaLab').textContent = empresa;
 
     const indicSec = document.getElementById('rIndicacionSecLab');
     indicSec.classList.toggle('hidden', !indicacion);
     document.getElementById('rIndicacionLab').textContent = indicacion;
+    document.getElementById('rCie10Lab').textContent = cie10 ? '(CIE-10: ' + cie10 + ')' : '';
 
     const otrasSec = document.getElementById('rOtrasSecLab');
     otrasSec.classList.toggle('hidden', !otras);
     document.getElementById('rOtrasLab').textContent = otras;
 
-    const validLabs = labs.filter(m=>m.nombre.trim());
+    const gruposLab = itemsSeleccionados(CATEGORIAS_LAB, labSeleccion, labOtros);
     const rLabs = document.getElementById('rLabs');
-    if(validLabs.length===0){
-      rLabs.innerHTML = '<div class="empty-meds">Sin exámenes indicados.</div>';
+    if(gruposLab.length===0){
+      rLabs.innerHTML = '<div class="empty-meds">Sin exámenes seleccionados.</div>';
     }else{
-      rLabs.innerHTML = validLabs.map((m,i)=>`
+      rLabs.innerHTML = gruposLab.map(g => `
         <div class="med-line">
-          <div class="mn">${i+1}. ${escapeHtml(m.nombre)}</div>
-          ${m.indicaciones ? '<div class="mi">'+escapeHtml(m.indicaciones)+'</div>' : ''}
+          <div class="mn">${escapeHtml(g.categoria)}</div>
+          <div class="mi">${g.items.map(escapeHtml).join(' · ')}</div>
         </div>
       `).join('');
     }
@@ -1255,6 +1450,7 @@
 
     document.getElementById('rSignNombreLab').textContent = doc ? doc.nombre : 'Seleccione un médico';
     document.getElementById('rSignColegLab').textContent = doc ? doc.colegiatura : '';
+    document.getElementById('rSignEspecialidadLab').textContent = doc && doc.especialidad ? doc.especialidad : '';
 
     const canPrint = nombre && numDoc && doc;
     document.getElementById('printBtnLab').disabled = !canPrint;
@@ -1275,6 +1471,13 @@
     const tipoDoc = document.getElementById('pTipoDocImg').value;
     const numDoc = document.getElementById('pNumDocImg').value.trim();
     const edad = document.getElementById('pEdadImg').value.trim();
+    const sexo = document.getElementById('pSexoImg').value;
+    const telefono = document.getElementById('pTelefonoImg').value.trim();
+    const correo = document.getElementById('pCorreoImg').value.trim();
+    const area = document.getElementById('pAreaImg').value.trim();
+    const empresa = document.getElementById('pEmpresaImg').value.trim();
+    const cie10 = document.getElementById('pCie10Img').value.trim();
+    const tipoEstudio = document.querySelector('input[name="tipoEstudioImg"]:checked')?.value || 'Diagnóstico';
     const indicacion = document.getElementById('pIndicacionImg').value.trim();
     const otras = document.getElementById('pOtrasImg').value.trim();
 
@@ -1282,24 +1485,36 @@
     document.getElementById('rTipoDocLabelImg').textContent = tipoDoc;
     document.getElementById('rNumDocImg').textContent = numDoc || '—';
     document.getElementById('rEdadImg').textContent = edad || '—';
+    document.getElementById('rSexoRowImg').classList.toggle('hidden', !sexo);
+    document.getElementById('rSexoImg').textContent = sexo === 'M' ? 'Masculino' : sexo === 'F' ? 'Femenino' : '';
+    document.getElementById('rTelefonoRowImg').classList.toggle('hidden', !telefono);
+    document.getElementById('rTelefonoImg').textContent = telefono;
+    document.getElementById('rCorreoRowImg').classList.toggle('hidden', !correo);
+    document.getElementById('rCorreoImg').textContent = correo;
+    document.getElementById('rAreaRowImg').classList.toggle('hidden', !area);
+    document.getElementById('rAreaImg').textContent = area;
+    document.getElementById('rEmpresaRowImg').classList.toggle('hidden', !empresa);
+    document.getElementById('rEmpresaImg').textContent = empresa;
+    document.getElementById('rTipoEstudioImg').textContent = tipoEstudio;
 
     const indicSec = document.getElementById('rIndicacionSecImg');
     indicSec.classList.toggle('hidden', !indicacion);
     document.getElementById('rIndicacionImg').textContent = indicacion;
+    document.getElementById('rCie10Img').textContent = cie10 ? '(CIE-10: ' + cie10 + ')' : '';
 
     const otrasSec = document.getElementById('rOtrasSecImg');
     otrasSec.classList.toggle('hidden', !otras);
     document.getElementById('rOtrasImg').textContent = otras;
 
-    const validImgs = imgs.filter(m=>m.nombre.trim());
+    const gruposImg = itemsSeleccionados(CATEGORIAS_IMG, imgSeleccion, imgOtros);
     const rImgs = document.getElementById('rImgs');
-    if(validImgs.length===0){
-      rImgs.innerHTML = '<div class="empty-meds">Sin estudios indicados.</div>';
+    if(gruposImg.length===0){
+      rImgs.innerHTML = '<div class="empty-meds">Sin estudios seleccionados.</div>';
     }else{
-      rImgs.innerHTML = validImgs.map((m,i)=>`
+      rImgs.innerHTML = gruposImg.map(g => `
         <div class="med-line">
-          <div class="mn">${i+1}. ${escapeHtml(m.nombre)}</div>
-          ${m.indicaciones ? '<div class="mi">'+escapeHtml(m.indicaciones)+'</div>' : ''}
+          <div class="mn">${escapeHtml(g.categoria)}</div>
+          <div class="mi">${g.items.map(escapeHtml).join(' · ')}</div>
         </div>
       `).join('');
     }
@@ -1334,6 +1549,7 @@
 
     document.getElementById('rSignNombreImg').textContent = doc ? doc.nombre : 'Seleccione un médico';
     document.getElementById('rSignColegImg').textContent = doc ? doc.colegiatura : '';
+    document.getElementById('rSignEspecialidadImg').textContent = doc && doc.especialidad ? doc.especialidad : '';
 
     const canPrint = nombre && numDoc && doc;
     document.getElementById('printBtnImg').disabled = !canPrint;
@@ -1367,6 +1583,8 @@
       tipoDoc: document.getElementById('pTipoDoc').value,
       numDoc: document.getElementById('pNumDoc').value.trim(),
       edad: document.getElementById('pEdad').value.trim(),
+      empresa: document.getElementById('pEmpresa').value.trim(),
+      cie10: document.getElementById('pCie10').value.trim(),
       medico: doc.nombre,
       colegiatura: doc.colegiatura,
       especialidad: doc.especialidad || '',
@@ -1386,6 +1604,7 @@
     qr.make();
     document.getElementById('rQrCode').innerHTML = qr.createImgTag(3, 4);
     document.getElementById('rQrArea').classList.remove('hidden');
+    document.getElementById('rFolio').textContent = 'Folio N°: ' + recetaId.toUpperCase();
 
     // dejar que el navegador pinte el QR antes de usarlo
     await new Promise(r => setTimeout(r, 60));
@@ -1407,6 +1626,8 @@
       tipoDoc: document.getElementById('pTipoDocLab').value,
       numDoc: document.getElementById('pNumDocLab').value.trim(),
       edad: document.getElementById('pEdadLab').value.trim(),
+      empresa: document.getElementById('pEmpresaLab').value.trim(),
+      cie10: document.getElementById('pCie10Lab').value.trim(),
       medico: doc.nombre,
       colegiatura: doc.colegiatura,
       especialidad: doc.especialidad || '',
@@ -1423,6 +1644,7 @@
     qr.make();
     document.getElementById('rQrCodeLab').innerHTML = qr.createImgTag(3, 4);
     document.getElementById('rQrAreaLab').classList.remove('hidden');
+    document.getElementById('rFolioLab').textContent = 'Folio N°: ' + recetaId.toUpperCase();
     await new Promise(r => setTimeout(r, 60));
 
     return { payload, verifyUrl };
@@ -1442,6 +1664,8 @@
       tipoDoc: document.getElementById('pTipoDocImg').value,
       numDoc: document.getElementById('pNumDocImg').value.trim(),
       edad: document.getElementById('pEdadImg').value.trim(),
+      empresa: document.getElementById('pEmpresaImg').value.trim(),
+      cie10: document.getElementById('pCie10Img').value.trim(),
       medico: doc.nombre,
       colegiatura: doc.colegiatura,
       especialidad: doc.especialidad || '',
@@ -1458,6 +1682,7 @@
     qr.make();
     document.getElementById('rQrCodeImg').innerHTML = qr.createImgTag(3, 4);
     document.getElementById('rQrAreaImg').classList.remove('hidden');
+    document.getElementById('rFolioImg').textContent = 'Folio N°: ' + recetaId.toUpperCase();
     await new Promise(r => setTimeout(r, 60));
 
     return { payload, verifyUrl };
@@ -1634,10 +1859,10 @@
 
   // ---------- init ----------
   renderMeds();
-  renderLabs();
-  renderImgs();
+  renderLabsChecklist();
+  renderImgsChecklist();
   document.getElementById('docNombre').addEventListener('input', updateSaveDoctorBtn);
-  document.getElementById('docColegiatura').addEventListener('input', updateSaveDoctorBtn);
+  document.getElementById('docCmp').addEventListener('input', updateSaveDoctorBtn);
   document.getElementById('loginPassword').addEventListener('keydown', (e) => { if(e.key === 'Enter') handleLoginSubmit(); });
 </script>
 </body>
